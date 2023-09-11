@@ -1,7 +1,16 @@
 from flask import Flask, render_template, request, session, flash, redirect, url_for
 from posts import posts
+import sqlite3
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'blablabla' #procurar saber sobre
+
+@app.config.from_object(__name__) #confg para que o python possa gerir as confg de frameworks que n sejam dele
+
+DATABASE = "banco.bd" #variável para poder facilitar a manipulação do banco de dados no futuro
+
+def conectar(): #função para se conectar ao banco de dados
+    def sqlite3.connect(DATABASE)
 
 @app.route('/')
 def exibir_entradas():
