@@ -23,18 +23,17 @@ def teardown_request(f): #função para encerrar a conexão com o banco de dados
 @app.route('/')
 def exibir_entradas():
     # entradas = posts[::-1] #mock das postagens ordenadas da mais recente para mais antiga
+    
     sql = "SELECT titulo, texto, data_criacao FROM posts ORDER BY ID DESC" #variável para armazenar o resultado do comando select
     resultado = g.bd.execute(sql) #resultado da pesquisa que será retornado como um dict
-    entrada = [
-        {"titulo": "Primeiro Titulo",
-        "texto": "Primeiro texto",
-        "data_criacao": "11/09/2023"
-        },
-        {"titulo": "Segundo Titulo",
-        "texto": "Segundo texto",
-        "data_criacao": "12/09/2023"
-        }
-    ]
+    entrada = []
+
+    for titulo, texto, data_criacao in resultado.fetchall(): #percorre o resultado e adiciona eles às variáveis respectivas
+        entrada.append({
+            "titulo": titulo,
+            "texto": texto,
+            "data_criacao": data_criacao
+        })
 
     return render_template('exibir_entradas.html', entradas=entrada) #renderização do html na pasta /templates
 
@@ -61,13 +60,15 @@ def logout():
 
 @app.route('/inserir', methods=['POST'])
 def inserir_entradas(): #rota para inserir novos posts
-    if session['logado']:
-        novo_post= { #criando um novo post para ser publicado
-        "titulo": request.form['titulo'],
-        "texto": request.form['texto']
-        }
-        posts.append(novo_post) #adicionando ao bd mockado
-        flash("Post criado com sucesso!")
+    if not session['logado']:
+        abort(401)
+
+    titulo = request.form.get('titulo') #puxa os valores inseridos nos formulários
+    texto = request.form.get('texto')
+    sql = "INSERT INTO posts (titulo, texto) values (?,?)" #insere os valores retirados dos fomulários no bd. as ? são máscaras, por n existirem valores fixos
+    g.bd.execute(sql,[titulo, texto]) #executa a migração dos dados
+    g.bd.commit() #aquele bom e velho commit
+    flash("Post criado com sucesso!")
     return redirect(url_for('exibir_entradas'))
 
 # @app.route('/posts/<int:id>')
